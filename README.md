@@ -365,6 +365,16 @@ I like having this setting enabled to keep my media folders nice and organized.
 
 As your media library grows, you will eventually run into the issue of storage space. The obvious solution is to get more hard drives, but it's less obvious how to distribute files across multiple drives with this setup. The best solution in my experience is to use [MergerFS](https://github.com/trapexit/mergerfs). MergerFS essentially combines multiple hard drives into a single folder on your filesystem. Then you can point your '/path/to/media' folder to the MergerFS folder. As opposed to traditional solutions such as RAID, MergerFS allows any combination of drives regardless of brand or storage capacity. However, it does not provide any redundancy. It is possible to combine MergerFS with [SnapRAID](https://www.snapraid.it/) if you'd like some extra redundancy, but personally I have never used it.
 
-**Quality Control**
-
-The website [TRaSH Guides](https://trash-guides.info/Radarr/) is an amazing resource for setting up quality profile settings. By following these instructions you can achieve fine tuned quality control, such as prioritizing downloads from specific release groups, specific file formats (ex. prefer h.265 over h.264), and set file size limits.
+**NPMPlus + Crowdsec**
+Use the following whitelist:
+```
+name: crowdsecurity/jellyfin-whitelist
+description: "Whitelist events from jellyfin"
+filter: "evt.Meta.service == 'http' && evt.Meta.log_type in ['http_access-log', 'http_error-log']"
+whitelist:
+  reason: "Jellyfin whitelist"
+  expression:
+   - evt.Meta.http_status == '403' && evt.Meta.http_verb == 'POST' && evt.Meta.http_path matches '^/Sessions/Playing/Progress$' # When playing videos
+   - evt.Meta.http_status == '404' && evt.Meta.http_verb == 'GET' && evt.Meta.http_path matches '(?i)^/items/([a-z0-9\\-]+)/images/(thumb|primary)' # When brow>
+   - evt.Meta.http_verb == 'GET' && evt.Meta.http_path contains '/HomeScreen/CachedImage/' # When using Custom Home Sections plugin with Jellyseerr integration
+```
